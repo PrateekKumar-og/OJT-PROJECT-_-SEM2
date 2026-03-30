@@ -1,0 +1,84 @@
+.transactions-container {
+    padding: 0;
+}
+
+/* TITLE */
+.transactions-container h1 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 32px;
+}
+
+/* BUTTON */
+.download-btn {
+    margin-bottom: 20px;
+    padding: 12px 20px;
+    background: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.download-btn:hover {
+    background: #3367d6;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    border: 1px solid #e0e0e0;
+}
+
+/* HEADER */
+thead {
+    background: #4285F4;
+    color: white;
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: left;
+    font-size: 16px;
+}
+
+th {
+    font-weight: bold;
+}
+
+/* ROWS */
+tbody tr {
+    border-bottom: 1px solid #eee;
+}
+
+tbody tr:hover {
+    background: #f8f9fa;
+}
+
+/* STATUS COLORS */
+.status {
+    font-weight: bold;
+}
+
+.status.success {
+    color: #34A853; /* Google green */
+}
+
+.status.failed {
+    color: #EA4335; /* Google red */
+}
+
+/* EMPTY STATE */
+.empty {
+    color: #777;
+    font-size: 16px;
+    margin-top: 20px;
+}

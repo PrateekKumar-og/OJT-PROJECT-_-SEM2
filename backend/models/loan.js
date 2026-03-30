@@ -1,12 +1,18 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const loanSchema = new mongoose.Schema({
-    user_id: String,
-    amount: Number,
-    status: {
+    type: {
         type: String,
-        default: "pending"
+        required: true
+    },
+    amount: {
+        type: Number,
+        required: true
+    },
+    paid: {
+        type: Number,
+        default: 0
     }
 }, { timestamps: true });
 
-module.exports = mongoose.model("Loan", loanSchema);
+export default mongoose.model("Loan", loanSchema);

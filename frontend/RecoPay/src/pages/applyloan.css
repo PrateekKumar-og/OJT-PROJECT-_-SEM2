@@ -1,0 +1,120 @@
+/* CONTAINER */
+.apply-container {
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+/* FORM CARD */
+.loan-form {
+    width: 100%;
+    max-width: 800px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+/* TITLE */
+.form-title {
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-size: 32px;
+    font-weight: bold;
+    color: #000;
+}
+
+/* STEP TITLE */
+.loan-form h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 24px;
+    color: #111;
+}
+
+/* LABELS */
+.loan-form label {
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 16px;
+    color: #222;
+}
+
+/* INPUTS */
+.loan-form input,
+.loan-form select,
+.loan-form textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    font-size: 15px;
+    font-family: inherit;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    color: #333;
+}
+
+.loan-form input:focus,
+.loan-form select:focus,
+.loan-form textarea:focus {
+    border-color: #4285F4;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.15);
+}
+
+/* BUTTON WRAPPER */
+.form-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 35px;
+}
+
+/* BUTTON BASE */
+.btn {
+    flex: 1;
+    padding: 15px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background-color 0.2s;
+}
+
+/* PRIMARY */
+.btn.primary {
+    background: #4285F4;
+    color: white;
+}
+
+.btn.primary:hover {
+    background: #3367d6;
+}
+
+/* SECONDARY */
+.btn.secondary {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.btn.secondary:hover {
+    background: #d4d4d4;
+}
+
+/* REVIEW BOX */
+.review-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    margin-bottom: 20px;
+}
+
+.review-box p {
+    margin: 8px 0;
+    font-size: 16px;
+}
