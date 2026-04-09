@@ -4,7 +4,7 @@ import "./repayment.css";
 
 function Repayment() {
 
-    const { loans, updateLoan, addTransaction } = useContext(LoanContext);
+    const { loans, payLoan } = useContext(LoanContext);
 
     // 🔥 HANDLE EMI PAYMENT
     const handlePayEMI = (loan, index) => {

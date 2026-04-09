@@ -1,17 +1,15 @@
 .dashboard-container {
     display: flex;
     height: 100vh;
-    font-family: "Times New Roman", Times, serif;
 }
 
 /* SIDEBAR */
+/* SIDEBAR */
 .sidebar {
-    width: 250px;
-    background-color: #344356; /* Dark slate blue from screenshot */
+    width: 220px;
+    background: #2f3e4e;
     color: white;
-    padding-top: 30px;
-    display: flex;
-    flex-direction: column;
+    padding: 20px;
 }
 
 .sidebar h2 {

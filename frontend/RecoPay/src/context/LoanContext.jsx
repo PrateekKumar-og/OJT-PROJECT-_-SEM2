@@ -1,53 +1,80 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 
 export const LoanContext = createContext();
 
 export const LoanProvider = ({ children }) => {
 
-    const [loans, setLoans] = useState([]);
-    const [transactions, setTransactions] = useState([]);
-    const [tickets, setTickets] = useState([]);
+    // 🔹 LOAD LOANS
+    const [loans, setLoans] = useState(() => {
+        const saved = localStorage.getItem("loans");
+        return saved ? JSON.parse(saved) : [];
+    });
 
-    // ADD LOAN
+    // 🔹 LOAD TRANSACTIONS
+    const [transactions, setTransactions] = useState(() => {
+        const saved = localStorage.getItem("transactions");
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // 🔹 SAVE
+    useEffect(() => {
+        localStorage.setItem("loans", JSON.stringify(loans));
+    }, [loans]);
+
+    useEffect(() => {
+        localStorage.setItem("transactions", JSON.stringify(transactions));
+    }, [transactions]);
+
+    // ✅ ADD LOAN
     const addLoan = (loan) => {
-        setLoans((prev) => [...prev, loan]);
-    };
 
-    // PAY LOAN
-    const payLoan = (id, amount) => {
-        setLoans((prev) =>
-            prev.map((loan) =>
-                loan.id === id
-                    ? { ...loan, paid: (loan.paid || 0) + amount }
-                    : loan
-            )
-        );
-    };
-
-    // ADD TRANSACTION
-    const addTransaction = (tx) => {
-        setTransactions((prev) => [tx, ...prev]);
-    };
-
-    // ADD TICKET
-    const addTicket = (data) => {
-        const newTicket = {
-            id: Date.now(),
-            date: new Date().toLocaleDateString(),
-            ...data,
-            status: "Open"
+        const newLoan = {
+            ...loan,
+            amount: Number(loan.amount),
+            duration: Number(loan.duration),
+            paid: 0
         };
 
-        setTickets((prev) => [newTicket, ...prev]);
+        setLoans(prev => [...prev, newLoan]);
+
+        // 🔥 CREDIT TRANSACTION
+        addTransaction({
+            id: Date.now(),
+            date: new Date().toLocaleDateString(),
+            type: loan.type,
+            category: "Loan",
+            amount: newLoan.amount,
+            status: "Success"
+        });
     };
 
-    // 🔥 RESOLVE TICKET
-    const resolveTicket = (id) => {
-        setTickets((prev) =>
-            prev.map((t) =>
-                t.id === id ? { ...t, status: "Resolved" } : t
-            )
+    // ✅ PAY EMI (FIXED LOGIC)
+    const payLoan = (index) => {
+
+        setLoans(prev =>
+            prev.map((loan, i) => {
+                if (i !== index) return loan;
+
+                const emi = Math.ceil(loan.amount / loan.duration);
+
+                let updatedPaid = (loan.paid || 0) + emi;
+
+                // ✅ FORCE COMPLETE
+                if (updatedPaid >= loan.amount) {
+                    updatedPaid = loan.amount;
+                }
+
+                return {
+                    ...loan,
+                    paid: updatedPaid
+                };
+            })
         );
+    };
+
+    // ✅ ADD TRANSACTION
+    const addTransaction = (tx) => {
+        setTransactions(prev => [...prev, tx]);
     };
 
     return (
@@ -56,10 +83,7 @@ export const LoanProvider = ({ children }) => {
             addLoan,
             payLoan,
             transactions,
-            addTransaction,
-            tickets,
-            addTicket,
-            resolveTicket   // ✅ important
+            addTransaction
         }}>
             {children}
         </LoanContext.Provider>

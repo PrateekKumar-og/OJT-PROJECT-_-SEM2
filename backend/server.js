@@ -4,7 +4,6 @@ import cors from "cors";
 
 // ROUTES
 import loanRoutes from "./routes/loan.routes.js";
-import authRoutes from "./routes/auth.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
 
 const app = express();
@@ -25,7 +24,6 @@ mongoose.connect("mongodb://127.0.0.1:27017/recopay")
 
 // ROUTES
 app.use("/api/loans", loanRoutes);
-app.use("/api/auth", authRoutes);
 app.use("/api/tickets", ticketRoutes);
 
 // SERVER
