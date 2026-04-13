@@ -1,7 +1,5 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { LoanContext } from "../context/LoanContext";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import "./transactions.css";
 
 function Transactions() {
@@ -11,89 +9,39 @@ function Transactions() {
 
     const { transactions = [] } = context;
 
-    // 🔥 FINAL PDF FUNCTION (BUG FREE)
-    const downloadPDF = () => {
+    // 🔍 SEARCH & FILTER
+    const [search, setSearch] = useState("");
+    const [filterCategory, setFilterCategory] = useState("All");
 
-        const doc = new jsPDF();
+    const filtered = transactions.filter(tx => {
+        const matchSearch = tx.type.toLowerCase().includes(search.toLowerCase()) ||
+            tx.category.toLowerCase().includes(search.toLowerCase());
+        const matchCategory = filterCategory === "All" || tx.category === filterCategory;
+        return matchSearch && matchCategory;
+    });
 
-        // 🏦 LOGO
-        doc.setFontSize(20);
-        doc.setTextColor(40, 100, 200);
-        doc.text("RecoPay", 14, 18);
-
-        // 📄 TITLE
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 0);
-        doc.text("Loan Transaction Statement", 14, 28);
-
-        // 👤 USER + DATE
-        doc.setFontSize(10);
-        doc.text("User: Demo User", 14, 36);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 150, 36);
-
-        // 💰 CALCULATIONS
-        const totalCredit = transactions
-            .filter(tx => tx.category === "Loan")
-            .reduce((sum, tx) => sum + Number(tx.amount), 0);
-
-        const totalDebit = transactions
-            .filter(tx => tx.category === "Repayment")
-            .reduce((sum, tx) => sum + Number(tx.amount), 0);
-
-        const balance = totalCredit - totalDebit;
-
-        // 💰 SUMMARY (FIXED)
-        doc.setFontSize(11);
-        doc.text(`Total Credit: Rs. ${totalCredit}`, 14, 46);
-        doc.text(`Total Debit: Rs. ${totalDebit}`, 80, 46);
-        doc.text(`Balance: Rs. ${balance}`, 150, 46);
-
-        // 📊 TABLE DATA (FIXED SPACING BUG)
-        const tableData = transactions.map((tx) => [
-            tx.date,
-            tx.id,
-            tx.type,
-            tx.category,
-            "Rs. " + String(tx.amount), // ✅ NO MORE SPACING BUG
-            tx.status
-        ]);
-
-        // 📊 TABLE
-        autoTable(doc, {
-            head: [["Date", "ID", "Type", "Category", "Amount", "Status"]],
-            body: tableData,
-            startY: 55,
-
-            styles: {
-                fontSize: 10,
-                cellPadding: 4,
-            },
-
-            headStyles: {
-                fillColor: [40, 100, 200],
-                textColor: 255,
-                fontStyle: "bold"
-            },
-
-            alternateRowStyles: {
-                fillColor: [245, 245, 245],
-            },
-
-            columnStyles: {
-                4: { halign: "right" },
-            }
-        });
-
-        // 📌 FOOTER
-        doc.setFontSize(9);
-        doc.setTextColor(100);
-        doc.text(
-            "This is a system-generated statement. No signature required.",
-            14,
-            doc.lastAutoTable.finalY + 10
+    // 📊 CSV EXPORT
+    const downloadCSV = () => {
+        const headers = ["Date", "ID", "Type", "Category", "Amount", "Status"];
+        const rows = filtered.map(tx =>
+            [tx.date, tx.id, tx.type, tx.category, tx.amount, tx.status].join(",")
         );
 
-        doc.save("RecoPay_Statement.pdf");
+        const csv = [headers.join(","), ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "RecoPay_Transactions.csv";
+        link.click();
+
+        URL.revokeObjectURL(url);
+    };
+
+    // 🖨️ PRINT / PDF
+    const handlePrint = () => {
+        window.print();
     };
 
     return (
@@ -101,20 +49,48 @@ function Transactions() {
 
             <h1>Transaction History</h1>
 
-            {/* ✅ BUTTON */}
-            <button className="download-btn" onClick={downloadPDF}>
-                Download Statement
-            </button>
+            {/* ── CONTROLS ── */}
+            <div className="tx-controls">
+                <input
+                    className="tx-search"
+                    type="text"
+                    placeholder="Search transactions..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
 
-            {transactions.length === 0 ? (
-                <p>No transactions yet</p>
+                <select
+                    className="tx-filter"
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                >
+                    <option value="All">All Categories</option>
+                    <option value="Loan">Loan</option>
+                    <option value="Repayment">Repayment</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+
+                <button className="download-btn" onClick={handlePrint}>
+                    PDF
+                </button>
+                <button className="download-btn csv-btn" onClick={downloadCSV}>
+                    CSV
+                </button>
+            </div>
+
+            {/* ── SUMMARY ── */}
+            <div className="tx-summary">
+                <span>{filtered.length} transaction{filtered.length !== 1 ? "s" : ""}</span>
+                <span>Total: ₹{filtered.reduce((s, tx) => s + Number(tx.amount), 0).toLocaleString()}</span>
+            </div>
+
+            {filtered.length === 0 ? (
+                <p>No transactions found</p>
             ) : (
                 <table>
-
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>ID</th>
                             <th>Type</th>
                             <th>Category</th>
                             <th>Amount</th>
@@ -123,34 +99,39 @@ function Transactions() {
                     </thead>
 
                     <tbody>
-                        {transactions.map((tx) => (
+                        {[...filtered].reverse().map((tx) => (
                             <tr key={tx.id}>
                                 <td>{tx.date}</td>
-                                <td>{tx.id}</td>
                                 <td>{tx.type}</td>
-                                <td>{tx.category}</td>
-                                <td>₹{tx.amount}</td>
-
-                                {/* ✅ STATUS COLOR FIX */}
-                                <td
-                                    style={{
-                                        color:
-                                            tx.status === "Failed"
-                                                ? "#dc2626"
-                                                : "#16a34a",
-                                        fontWeight: "600"
-                                    }}
-                                >
+                                <td>
+                                    <span className={`tx-badge ${tx.category.toLowerCase()}`}>
+                                        {tx.category}
+                                    </span>
+                                </td>
+                                <td style={{
+                                    color: tx.category === "Loan"
+                                        ? "var(--accent-green)"
+                                        : tx.category === "Cancelled"
+                                            ? "var(--accent-red)"
+                                            : "var(--accent-orange)",
+                                    fontWeight: "600"
+                                }}>
+                                    {tx.category === "Loan" ? "+" : "−"}₹{Number(tx.amount).toLocaleString()}
+                                </td>
+                                <td style={{
+                                    color: tx.status === "Success"
+                                        ? "var(--accent-green)"
+                                        : "var(--accent-red)",
+                                    fontWeight: "600",
+                                    fontSize: "12px"
+                                }}>
                                     {tx.status}
                                 </td>
-
                             </tr>
                         ))}
                     </tbody>
-
                 </table>
             )}
-
         </div>
     );
 }

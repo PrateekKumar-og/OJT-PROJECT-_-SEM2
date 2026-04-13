@@ -1,3 +1,222 @@
-body {
+/* ═══════════════════════════════════════════════════════════════
+   RECOPAY — SWIFTBANK INSPIRED DESIGN SYSTEM
+   Deep Navy Dark Theme with Cyan-Blue Accents
+═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+  /* ── Brand Colors (SwiftBank Blue) ── */
+  --primary: #1E90FF;
+  --primary-light: #4DA8FF;
+  --primary-dark: #1674CC;
+  --primary-subtle: rgba(30, 144, 255, 0.12);
+  --primary-glow: rgba(30, 144, 255, 0.25);
+
+  /* ── Accent Colors ── */
+  --accent-green: #00D68F;
+  --accent-green-subtle: rgba(0, 214, 143, 0.12);
+  --accent-orange: #FFB443;
+  --accent-orange-subtle: rgba(255, 180, 67, 0.12);
+  --accent-red: #FF4757;
+  --accent-red-subtle: rgba(255, 71, 87, 0.12);
+  --accent-cyan: #00D2FF;
+
+  /* ── Deep Navy Surfaces ── */
+  --bg-base: #060B18;
+  --bg-primary: #0A1128;
+  --bg-secondary: #0E1A35;
+  --bg-card: #111D38;
+  --bg-card-hover: #162548;
+  --bg-elevated: #1A2B4A;
+  --bg-input: #0D1829;
+
+  /* ── Text ── */
+  --text-primary: #F0F4FF;
+  --text-secondary: #8B98B8;
+  --text-muted: #4A5676;
+  --text-accent: var(--primary-light);
+
+  /* ── Borders ── */
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.03);
+  --border-active: rgba(30, 144, 255, 0.4);
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 24px rgba(30, 144, 255, 0.15);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.25);
+
+  /* ── Radius ── */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-full: 100px;
+
+  /* ── Transitions ── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: 0.15s var(--ease-out);
+  --transition-base: 0.3s var(--ease-out);
+  --transition-slow: 0.5s var(--ease-out);
+}
+
+/* ═══ LIGHT THEME (must be AFTER :root for override) ═══ */
+html[data-theme="light"] {
+  --bg-base: #F5F7FB;
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F0F2F8;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F5F7FA;
+  --bg-elevated: #EDF0F7;
+  --bg-input: #F5F7FB;
+
+  --text-primary: #1A1D2E;
+  --text-secondary: #5A6178;
+  --text-muted: #8E95A9;
+
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.04);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 24px rgba(30, 144, 255, 0.1);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-elevated);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--primary);
+  color: white;
+}
+
+/* ── Utility Animations ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(30, 144, 255, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(30, 144, 255, 0.3);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
 }

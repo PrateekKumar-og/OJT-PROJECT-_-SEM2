@@ -1,31 +1,31 @@
 import { useContext } from "react";
 import { LoanContext } from "../context/LoanContext";
+import { useToast } from "../context/ToastContext";
 import "./repayment.css";
 
 function Repayment() {
 
-    const { loans, payLoan } = useContext(LoanContext);
+    const { loans, payLoan, deleteLoan, addTransaction } = useContext(LoanContext);
+    const toast = useToast();
 
     // 🔥 HANDLE EMI PAYMENT
     const handlePayEMI = (loan, index) => {
 
         if (!loan.amount || loan.amount <= 0) {
-            alert("Invalid loan");
+            toast.error("Invalid loan");
             return;
         }
 
-        const emi = Math.round(loan.amount / 12);
+        if ((loan.paid || 0) >= loan.amount) {
+            toast.info("Loan already fully paid!");
+            return;
+        }
 
-        const updatedPaid = (loan.paid || 0) + emi;
+        const duration = Number(loan.duration) || 12;
+        const emi = Math.ceil(loan.amount / duration);
 
-        const updatedLoan = {
-            ...loan,
-            paid: updatedPaid > loan.amount ? loan.amount : updatedPaid
-        };
+        payLoan(index);
 
-        updateLoan(index, updatedLoan);
-
-        // 🔥 ADD TRANSACTION
         addTransaction({
             id: Date.now(),
             date: new Date().toLocaleDateString(),
@@ -34,69 +34,60 @@ function Repayment() {
             amount: emi,
             status: "Success"
         });
+
+        toast.success(`EMI of ₹${emi.toLocaleString()} paid successfully!`);
     };
+
+    // 🗑️ HANDLE DELETE
+    const handleDelete = (index) => {
+        if (window.confirm("Are you sure you want to cancel this loan?")) {
+            deleteLoan(index);
+            toast.info("Loan cancelled");
+        }
+    };
+
+    // STATS
+    const totalLoaned = loans.reduce((s, l) => s + Number(l.amount || 0), 0);
+    const totalPaid = loans.reduce((s, l) => s + Number(l.paid || 0), 0);
+    const totalRemaining = totalLoaned - totalPaid;
 
     return (
         <div className="repayment-container">
 
-            <h1>Repayment Overview</h1>
+            <h1>Repayment</h1>
 
-            {/* 🔥 CARDS */}
+            {/* SUMMARY CARDS */}
             <div className="cards">
-
                 <div className="card">
-                    <p>Outstanding Balance</p>
-                    <h2>
-                        ₹{
-                            loans.reduce(
-                                (sum, l) => sum + (l.amount - (l.paid || 0)),
-                                0
-                            )
-                        }
-                    </h2>
+                    <p>Total Loaned</p>
+                    <h2>₹{totalLoaned.toLocaleString()}</h2>
                 </div>
-
                 <div className="card">
                     <p>Total Paid</p>
-                    <h2>
-                        ₹{
-                            loans.reduce(
-                                (sum, l) => sum + (l.paid || 0),
-                                0
-                            )
-                        }
-                    </h2>
+                    <h2>₹{totalPaid.toLocaleString()}</h2>
                 </div>
-
                 <div className="card">
-                    <p>Next EMI Due</p>
-                    <h2>
-                        ₹{
-                            loans.length > 0
-                                ? Math.round(loans[0].amount / 12)
-                                : 0
-                        }
-                    </h2>
+                    <p>Remaining</p>
+                    <h2>₹{totalRemaining.toLocaleString()}</h2>
                 </div>
-
             </div>
 
-            {/* 🔥 TABLE */}
-            <h3>EMI Schedule</h3>
+            <h3>Active Loans</h3>
 
             {loans.length === 0 ? (
-                <p>No loans found</p>
+                <p style={{ color: "var(--text-muted)", padding: "20px 0" }}>
+                    No loans yet — apply for a loan first
+                </p>
             ) : (
                 <table>
-
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Loan Type</th>
-                            <th>Total</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Duration</th>
                             <th>EMI</th>
                             <th>Progress</th>
-                            <th>Remaining</th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -104,74 +95,71 @@ function Repayment() {
                     <tbody>
                         {loans.map((loan, index) => {
 
-                            const amount = Number(loan.amount) || 0;
-                            const paid = Number(loan.paid) || 0;
-
-                            const emi = amount > 0 ? Math.round(amount / 12) : 0;
-
-                            const totalEmi =
-                                emi > 0 ? Math.ceil(amount / emi) : 0;
-
-                            const paidEmi =
-                                emi > 0 ? Math.floor(paid / emi) : 0;
-
-                            const percent =
-                                totalEmi > 0
-                                    ? Math.round((paidEmi / totalEmi) * 100)
-                                    : 0;
-
-                            const remaining = amount - paid;
+                            const duration = Number(loan.duration) || 12;
+                            const emi = Math.ceil(loan.amount / duration);
+                            const paid = loan.paid || 0;
+                            const percent = Math.round((paid / loan.amount) * 100);
+                            const isFullyPaid = paid >= loan.amount;
 
                             return (
-                                <tr key={index}>
-
-                                    <td>{index + 1}</td>
-                                    <td>{loan.type}</td>
-                                    <td>₹{amount}</td>
-                                    <td>₹{emi}</td>
-
-                                    {/* 🔥 PROGRESS */}
+                                <tr key={loan.id || index}>
+                                    <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>{loan.type}</td>
+                                    <td>₹{Number(loan.amount).toLocaleString()}</td>
+                                    <td>{duration} mo</td>
+                                    <td style={{ color: "var(--primary-light)", fontWeight: "600" }}>
+                                        ₹{emi.toLocaleString()}
+                                    </td>
                                     <td>
                                         <div className="progress-bar">
-                                            <div
-                                                className="progress"
-                                                style={{ width: `${percent}%` }}
-                                            ></div>
+                                            <div className="progress" style={{ width: `${percent}%` }} />
                                         </div>
-                                        <small>
-                                            {paidEmi}/{totalEmi} EMI ({percent}%)
-                                        </small>
+                                        <small>{percent}% — ₹{paid.toLocaleString()} / ₹{Number(loan.amount).toLocaleString()}</small>
                                     </td>
-
-                                    <td>₹{remaining}</td>
-
-                                    {/* 🔥 BUTTON */}
                                     <td>
-                                        {remaining > 0 ? (
-                                            <button
-                                                className="pay-btn"
-                                                onClick={() =>
-                                                    handlePayEMI(loan, index)
-                                                }
-                                                disabled={amount === 0}
-                                            >
-                                                Pay EMI
-                                            </button>
-                                        ) : (
-                                            <button className="paid-btn">
-                                                Paid
-                                            </button>
-                                        )}
+                                        <span style={{
+                                            display: "inline-block",
+                                            padding: "3px 12px",
+                                            borderRadius: "100px",
+                                            fontSize: "11px",
+                                            fontWeight: "600",
+                                            letterSpacing: "0.3px",
+                                            background: isFullyPaid
+                                                ? "var(--accent-green-subtle)"
+                                                : "var(--primary-subtle)",
+                                            color: isFullyPaid
+                                                ? "var(--accent-green)"
+                                                : "var(--primary-light)"
+                                        }}>
+                                            {loan.status || (isFullyPaid ? "Completed" : "Active")}
+                                        </span>
                                     </td>
-
+                                    <td>
+                                        <div style={{ display: "flex", gap: "6px" }}>
+                                            {isFullyPaid ? (
+                                                <button className="paid-btn">Paid ✓</button>
+                                            ) : (
+                                                <button
+                                                    className="pay-btn"
+                                                    onClick={() => handlePayEMI(loan, index)}
+                                                >
+                                                    Pay EMI
+                                                </button>
+                                            )}
+                                            <button
+                                                className="delete-btn"
+                                                onClick={() => handleDelete(index)}
+                                                title="Cancel Loan"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             );
                         })}
                     </tbody>
-
                 </table>
             )}
-
         </div>
     );
 }

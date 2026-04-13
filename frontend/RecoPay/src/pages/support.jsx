@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import "./support.css";
 
+const API_URL = "http://localhost:5000/api";
+
 function Support() {
 
     const [form, setForm] = useState({
@@ -11,11 +13,20 @@ function Support() {
 
     const [tickets, setTickets] = useState([]);
     const [success, setSuccess] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const fetchTickets = async () => {
-        const res = await fetch("http://localhost:5000/api/tickets");
-        const data = await res.json();
-        setTickets(data);
+        try {
+            const res = await fetch(`${API_URL}/tickets`);
+            if (!res.ok) throw new Error("Failed to fetch tickets");
+            const data = await res.json();
+            setTickets(data);
+            setError("");
+        } catch (err) {
+            console.error("Fetch error:", err);
+            setError("Could not load tickets. Make sure the backend server is running.");
+        }
     };
 
     useEffect(() => {
@@ -31,25 +42,48 @@ function Support() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
-        await fetch("http://localhost:5000/api/tickets", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form)
-        });
+        try {
+            const res = await fetch(`${API_URL}/tickets`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form)
+            });
 
-        setSuccess(true);
-        setForm({ name: "", email: "", issue: "" });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || "Failed to submit ticket");
+            }
 
-        fetchTickets();
+            setSuccess(true);
+            setForm({ name: "", email: "", issue: "" });
+            setError("");
+
+            fetchTickets();
+
+            // Auto-hide success message after 3 seconds
+            setTimeout(() => setSuccess(false), 3000);
+        } catch (err) {
+            setError(err.message);
+            setSuccess(false);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleResolve = async (id) => {
-        await fetch(`http://localhost:5000/api/tickets/${id}`, {
-            method: "PUT"
-        });
+        try {
+            const res = await fetch(`${API_URL}/tickets/${id}`, {
+                method: "PUT"
+            });
 
-        fetchTickets();
+            if (!res.ok) throw new Error("Failed to resolve ticket");
+
+            fetchTickets();
+        } catch (err) {
+            setError(err.message);
+        }
     };
 
     return (
@@ -60,6 +94,19 @@ function Support() {
             {success && (
                 <div className="success-msg">
                     ✅ Ticket submitted successfully!
+                </div>
+            )}
+
+            {error && (
+                <div className="error-msg" style={{
+                    background: "#fef2f2",
+                    color: "#dc2626",
+                    padding: "10px 16px",
+                    borderRadius: "8px",
+                    marginBottom: "16px",
+                    border: "1px solid #fecaca"
+                }}>
+                    ⚠️ {error}
                 </div>
             )}
 
@@ -81,6 +128,7 @@ function Support() {
                         <label>Email</label>
                         <input
                             name="email"
+                            type="email"
                             value={form.email}
                             onChange={handleChange}
                             required
@@ -97,7 +145,9 @@ function Support() {
                         />
                     </div>
 
-                    <button type="submit">Submit Ticket</button>
+                    <button type="submit" disabled={loading}>
+                        {loading ? "Submitting..." : "Submit Ticket"}
+                    </button>
 
                 </form>
             </div>
@@ -117,24 +167,32 @@ function Support() {
                 </thead>
 
                 <tbody>
-                    {tickets.map((t) => (
-                        <tr key={t._id}>
-                            <td>{new Date(t.createdAt).toLocaleDateString()}</td>
-                            <td>{t.name}</td>
-                            <td>{t.email}</td>
-                            <td>{t.issue}</td>
-                            <td className={t.status === "Resolved" ? "resolved" : "open"}>
-                                {t.status}
-                            </td>
-                            <td>
-                                {t.status === "Open" && (
-                                    <button onClick={() => handleResolve(t._id)}>
-                                        Resolve
-                                    </button>
-                                )}
+                    {tickets.length === 0 ? (
+                        <tr>
+                            <td colSpan="6" style={{ textAlign: "center", padding: "20px" }}>
+                                No tickets yet
                             </td>
                         </tr>
-                    ))}
+                    ) : (
+                        tickets.map((t) => (
+                            <tr key={t._id}>
+                                <td>{new Date(t.createdAt).toLocaleDateString()}</td>
+                                <td>{t.name}</td>
+                                <td>{t.email}</td>
+                                <td>{t.issue}</td>
+                                <td className={t.status === "Resolved" ? "resolved" : "open"}>
+                                    {t.status}
+                                </td>
+                                <td>
+                                    {t.status === "Open" && (
+                                        <button onClick={() => handleResolve(t._id)}>
+                                            Resolve
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
 

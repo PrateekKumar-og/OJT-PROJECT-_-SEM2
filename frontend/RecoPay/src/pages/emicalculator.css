@@ -1,0 +1,270 @@
+/* ═══════════════════════════════════════════════════════════════
+   EMI CALCULATOR — SwiftBank Style
+═══════════════════════════════════════════════════════════════ */
+
+.emi-container {
+    animation: fadeInUp 0.4s ease;
+}
+
+.emi-container h1 {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+    margin-bottom: 4px;
+}
+
+.emi-subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 28px;
+}
+
+.emi-layout {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+}
+
+/* ── INPUT CARD ── */
+.emi-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    flex: 1;
+    min-width: 300px;
+}
+
+.emi-input-group {
+    margin-bottom: 20px;
+}
+
+.emi-input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+}
+
+.emi-input-group input {
+    width: 100%;
+    padding: 13px 16px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-family: inherit;
+    transition: all var(--transition-base);
+    box-sizing: border-box;
+}
+
+.emi-input-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.emi-input-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-subtle);
+}
+
+.emi-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+}
+
+.emi-calc-btn {
+    flex: 1;
+    padding: 12px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.emi-calc-btn:hover {
+    background: var(--primary-light);
+    box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.emi-reset-btn {
+    padding: 12px 20px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    font-weight: 500;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.emi-reset-btn:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ── RESULT CARD ── */
+.emi-result-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    flex: 1;
+    min-width: 280px;
+    animation: fadeInUp 0.4s ease;
+}
+
+.emi-result-hero {
+    text-align: center;
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.emi-result-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+}
+
+.emi-result-amount {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--primary-light);
+    letter-spacing: -1px;
+}
+
+.emi-result-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.emi-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.emi-stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.emi-stat-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.emi-interest {
+    color: var(--accent-orange) !important;
+}
+
+/* ── SPLIT BAR ── */
+.emi-split-bar {
+    height: 6px;
+    background: var(--accent-orange-subtle);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.emi-split-principal {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--accent-cyan));
+    border-radius: 10px;
+    transition: width 0.8s var(--ease-out);
+}
+
+.emi-split-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.dot.principal {
+    background: var(--primary);
+}
+
+.dot.interest {
+    background: var(--accent-orange);
+}
+
+/* ── SCHEDULE TABLE ── */
+.emi-schedule {
+    animation: fadeInUp 0.5s ease;
+}
+
+.emi-schedule h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+}
+
+.emi-schedule table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.emi-schedule thead {
+    background: var(--bg-elevated);
+}
+
+.emi-schedule th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.emi-schedule td {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.emi-schedule tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.emi-schedule tbody tr:last-child td {
+    border-bottom: none;
+}

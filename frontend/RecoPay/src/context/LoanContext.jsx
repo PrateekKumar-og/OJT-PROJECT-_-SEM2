@@ -27,12 +27,14 @@ export const LoanProvider = ({ children }) => {
 
     // ✅ ADD LOAN
     const addLoan = (loan) => {
-
         const newLoan = {
             ...loan,
+            id: Date.now(),
             amount: Number(loan.amount),
             duration: Number(loan.duration),
-            paid: 0
+            paid: 0,
+            status: "Active",
+            createdAt: new Date().toISOString()
         };
 
         setLoans(prev => [...prev, newLoan]);
@@ -48,26 +50,50 @@ export const LoanProvider = ({ children }) => {
         });
     };
 
-    // ✅ PAY EMI (FIXED LOGIC)
+    // ✅ PAY EMI
     const payLoan = (index) => {
-
         setLoans(prev =>
             prev.map((loan, i) => {
                 if (i !== index) return loan;
 
-                const emi = Math.ceil(loan.amount / loan.duration);
-
+                const emi = Math.ceil(loan.amount / (loan.duration || 12));
                 let updatedPaid = (loan.paid || 0) + emi;
 
-                // ✅ FORCE COMPLETE
                 if (updatedPaid >= loan.amount) {
                     updatedPaid = loan.amount;
                 }
 
                 return {
                     ...loan,
-                    paid: updatedPaid
+                    paid: updatedPaid,
+                    status: updatedPaid >= loan.amount ? "Completed" : "Active"
                 };
+            })
+        );
+    };
+
+    // ✅ DELETE LOAN
+    const deleteLoan = (index) => {
+        const loan = loans[index];
+        setLoans(prev => prev.filter((_, i) => i !== index));
+
+        // Add cancellation transaction
+        addTransaction({
+            id: Date.now(),
+            date: new Date().toLocaleDateString(),
+            type: loan.type,
+            category: "Cancelled",
+            amount: loan.amount - (loan.paid || 0),
+            status: "Cancelled"
+        });
+    };
+
+    // ✅ UPDATE LOAN STATUS
+    const updateLoanStatus = (index, newStatus) => {
+        setLoans(prev =>
+            prev.map((loan, i) => {
+                if (i !== index) return loan;
+                return { ...loan, status: newStatus };
             })
         );
     };
@@ -77,13 +103,24 @@ export const LoanProvider = ({ children }) => {
         setTransactions(prev => [...prev, tx]);
     };
 
+    // ✅ CLEAR ALL DATA
+    const clearAllData = () => {
+        setLoans([]);
+        setTransactions([]);
+        localStorage.removeItem("loans");
+        localStorage.removeItem("transactions");
+    };
+
     return (
         <LoanContext.Provider value={{
             loans,
             addLoan,
             payLoan,
+            deleteLoan,
+            updateLoanStatus,
             transactions,
-            addTransaction
+            addTransaction,
+            clearAllData
         }}>
             {children}
         </LoanContext.Provider>

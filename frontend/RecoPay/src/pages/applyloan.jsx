@@ -1,12 +1,14 @@
 import { useState, useContext } from "react";
 import { LoanContext } from "../context/LoanContext";
+import { useToast } from "../context/ToastContext";
 import "./applyloan.css";
 
 function ApplyLoan() {
 
-    const [step, setStep] = useState(1);
-
     const { addLoan } = useContext(LoanContext);
+    const toast = useToast();
+
+    const [step, setStep] = useState(1);
 
     const [formData, setFormData] = useState({
         amount: "",
@@ -15,57 +17,43 @@ function ApplyLoan() {
         purpose: ""
     });
 
-    // INPUT CHANGE
     const handleChange = (e) => {
-        const { name, value } = e.target;
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
     // VALIDATION
     const validateStep = () => {
         if (step === 1) {
-            return formData.amount.trim() !== "" && formData.type.trim() !== "";
+            if (!formData.amount || Number(formData.amount) <= 0) {
+                toast.error("Please enter a valid amount");
+                return false;
+            }
+            return true;
         }
 
         if (step === 2) {
-            return formData.duration.trim() !== "" && formData.purpose.trim() !== "";
+            if (!formData.duration || Number(formData.duration) <= 0) {
+                toast.error("Please enter a valid duration");
+                return false;
+            }
+            if (!formData.purpose.trim()) {
+                toast.error("Please enter the purpose");
+                return false;
+            }
+            return true;
         }
 
         return true;
     };
 
-    // NEXT
-    const handleNext = () => {
-        if (!validateStep()) {
-            alert("Please fill all fields");
-            return;
-        }
-
-        setStep((prev) => prev + 1);
-    };
-
-    // BACK
-    const handleBack = () => {
-        setStep((prev) => prev - 1);
-    };
-
     // SUBMIT
     const handleSubmit = () => {
-        if (!validateStep()) {
-            alert("Incomplete form!");
-            return;
-        }
+        if (!validateStep()) return;
 
-        addLoan(formData); // ✅ save
+        addLoan(formData);
 
-        console.log("Saved Loan:", formData);
-        alert("Loan Application Submitted!");
+        toast.success("Loan Application Submitted Successfully! 🎉");
 
-        // RESET FORM
         setFormData({
             amount: "",
             type: "Personal",
@@ -80,39 +68,45 @@ function ApplyLoan() {
         <div className="apply-container">
             <div className="loan-form">
 
-                <h1 className="form-title">Apply for Loan</h1>
+                <h1 className="form-title">Apply for a Loan</h1>
 
                 {/* STEP 1 */}
                 {step === 1 && (
                     <>
-                        <h2>Step 1: Loan Info</h2>
+                        <h2>Step 1 — Basic Information</h2>
 
-                        <label>Loan Amount</label>
+                        <label>Amount (₹)</label>
                         <input
                             type="number"
                             name="amount"
                             value={formData.amount}
                             onChange={handleChange}
-                            placeholder="Enter amount"
+                            placeholder="e.g. 50000"
                         />
 
                         <label>Loan Type</label>
-                        <select
-                            name="type"
-                            value={formData.type}
-                            onChange={handleChange}
-                        >
-                            <option value="Personal">Personal</option>
-                            <option value="Education">Education</option>
-                            <option value="Business">Business</option>
+                        <select name="type" value={formData.type} onChange={handleChange}>
+                            <option>Personal</option>
+                            <option>Education</option>
+                            <option>Business</option>
+                            <option>Housing</option>
+                            <option>Vehicle</option>
                         </select>
+
+                        <div className="form-buttons">
+                            <button className="btn primary" onClick={() => {
+                                if (validateStep()) setStep(2);
+                            }}>
+                                Next →
+                            </button>
+                        </div>
                     </>
                 )}
 
                 {/* STEP 2 */}
                 {step === 2 && (
                     <>
-                        <h2>Step 2: Details</h2>
+                        <h2>Step 2 — Loan Details</h2>
 
                         <label>Duration (Months)</label>
                         <input
@@ -128,58 +122,45 @@ function ApplyLoan() {
                             name="purpose"
                             value={formData.purpose}
                             onChange={handleChange}
-                            placeholder="Why do you need this loan?"
-                        />
-                    </>
-                )}
+                            placeholder="Describe the purpose of this loan..."
+                        ></textarea>
 
-                {/* STEP 3 */}
-                {step === 3 && (
-                    <>
-                        <h2>Step 3: Review</h2>
-
-                        <div className="review-box">
-                            <p><b>Amount:</b> {formData.amount || "-"}</p>
-                            <p><b>Type:</b> {formData.type}</p>
-                            <p><b>Duration:</b> {formData.duration || "-"}</p>
-                            <p><b>Purpose:</b> {formData.purpose || "-"}</p>
+                        <div className="form-buttons">
+                            <button className="btn secondary" onClick={() => setStep(1)}>
+                                ← Back
+                            </button>
+                            <button className="btn primary" onClick={() => {
+                                if (validateStep()) setStep(3);
+                            }}>
+                                Review →
+                            </button>
                         </div>
                     </>
                 )}
 
-                {/* BUTTONS */}
-                <div className="form-buttons">
+                {/* STEP 3 — REVIEW */}
+                {step === 3 && (
+                    <>
+                        <h2>Step 3 — Review & Submit</h2>
 
-                    {step > 1 && (
-                        <button
-                            type="button"
-                            className="btn secondary"
-                            onClick={handleBack}
-                        >
-                            Back
-                        </button>
-                    )}
+                        <div className="review-box">
+                            <p><b>Amount</b> ₹{Number(formData.amount).toLocaleString()}</p>
+                            <p><b>Type</b> {formData.type}</p>
+                            <p><b>Duration</b> {formData.duration} months</p>
+                            <p><b>Purpose</b> {formData.purpose}</p>
+                            <p><b>Monthly EMI</b> ₹{Math.ceil(Number(formData.amount) / Number(formData.duration)).toLocaleString()}</p>
+                        </div>
 
-                    {step < 3 ? (
-                        <button
-                            type="button"
-                            className="btn primary"
-                            onClick={handleNext}
-                        >
-                            Next →
-                        </button>
-                    ) : (
-                        <button
-                            type="button"
-                            className="btn primary"
-                            onClick={handleSubmit}
-                        >
-                            Submit Application
-                        </button>
-                    )}
-
-                </div>
-
+                        <div className="form-buttons">
+                            <button className="btn secondary" onClick={() => setStep(2)}>
+                                ← Back
+                            </button>
+                            <button className="btn primary" onClick={handleSubmit}>
+                                Submit Application ✓
+                            </button>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );

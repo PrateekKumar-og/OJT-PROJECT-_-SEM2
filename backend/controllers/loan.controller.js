@@ -3,11 +3,22 @@ import Loan from "../models/loan.js";
 // CREATE LOAN
 export const createLoan = async (req, res) => {
     try {
-        const { type, amount } = req.body;
+        const { type, amount, duration, purpose } = req.body;
+
+        // ✅ INPUT VALIDATION
+        if (!type || !amount) {
+            return res.status(400).json({ message: "Type and amount are required" });
+        }
+
+        if (Number(amount) <= 0) {
+            return res.status(400).json({ message: "Amount must be greater than 0" });
+        }
 
         const loan = await Loan.create({
             type,
-            amount,
+            amount: Number(amount),
+            duration: Number(duration) || 12,
+            purpose: purpose || "",
             paid: 0
         });
 
@@ -24,7 +35,7 @@ export const createLoan = async (req, res) => {
 // GET ALL LOANS
 export const getLoans = async (req, res) => {
     try {
-        const loans = await Loan.find();
+        const loans = await Loan.find().sort({ createdAt: -1 });
 
         res.status(200).json(loans);
 

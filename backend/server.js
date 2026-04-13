@@ -1,10 +1,13 @@
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
+import dotenv from "dotenv";
+import connectDB from "./config/db.js";
 
 // ROUTES
 import loanRoutes from "./routes/loan.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
+
+dotenv.config();
 
 const app = express();
 
@@ -18,16 +21,20 @@ app.get("/", (req, res) => {
 });
 
 // DB CONNECTION
-mongoose.connect("mongodb://127.0.0.1:27017/recopay")
-    .then(() => console.log("MongoDB Connected"))
-    .catch(err => console.log(err));
+connectDB();
 
 // ROUTES
 app.use("/api/loans", loanRoutes);
 app.use("/api/tickets", ticketRoutes);
 
+// ERROR HANDLING MIDDLEWARE
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: "Something went wrong!" });
+});
+
 // SERVER
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

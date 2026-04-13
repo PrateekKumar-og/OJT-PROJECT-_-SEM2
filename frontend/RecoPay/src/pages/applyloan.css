@@ -1,120 +1,168 @@
-/* CONTAINER */
+/* ═══════════════════════════════════════════════════════════════
+   APPLY LOAN — SwiftBank Style Multi-step Form
+═══════════════════════════════════════════════════════════════ */
+
 .apply-container {
-    display: flex;
-    justify-content: flex-start;
     width: 100%;
+    animation: fadeInUp 0.4s ease;
 }
 
-/* FORM CARD */
+/* ── FORM CARD ── */
 .loan-form {
     width: 100%;
-    max-width: 800px;
-    background: #ffffff;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    max-width: 580px;
+    background: var(--bg-card);
+    padding: 36px 40px;
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
 }
 
-/* TITLE */
+/* ── TITLE ── */
 .form-title {
     margin-top: 0;
-    margin-bottom: 30px;
-    font-size: 32px;
-    font-weight: bold;
-    color: #000;
+    margin-bottom: 4px;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
 }
 
-/* STEP TITLE */
+/* ── STEP TITLE ── */
 .loan-form h2 {
     margin-top: 0;
-    margin-bottom: 25px;
-    font-size: 24px;
-    color: #111;
+    margin-bottom: 28px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
 }
 
-/* LABELS */
+/* ── LABELS ── */
 .loan-form label {
     display: block;
-    margin-top: 20px;
+    margin-top: 22px;
     margin-bottom: 8px;
-    font-weight: bold;
-    font-size: 16px;
-    color: #222;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-secondary);
+    letter-spacing: 0.2px;
 }
 
-/* INPUTS */
+/* ── INPUTS ── */
 .loan-form input,
 .loan-form select,
 .loan-form textarea {
     width: 100%;
-    padding: 14px;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
     font-size: 15px;
     font-family: inherit;
     box-sizing: border-box;
-    background-color: #ffffff;
-    color: #333;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: all var(--transition-base);
+}
+
+.loan-form input::placeholder,
+.loan-form textarea::placeholder {
+    color: var(--text-muted);
 }
 
 .loan-form input:focus,
 .loan-form select:focus,
 .loan-form textarea:focus {
-    border-color: #4285F4;
+    border-color: var(--primary);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.15);
+    box-shadow: 0 0 0 3px var(--primary-subtle);
 }
 
-/* BUTTON WRAPPER */
+.loan-form select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238B98B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+.loan-form select option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.loan-form textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+/* ── BUTTONS ── */
 .form-buttons {
     display: flex;
-    gap: 15px;
-    margin-top: 35px;
+    gap: 12px;
+    margin-top: 32px;
 }
 
-/* BUTTON BASE */
 .btn {
     flex: 1;
-    padding: 15px;
-    border-radius: 8px;
+    padding: 14px 20px;
+    border-radius: var(--radius-full);
     border: none;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    transition: background-color 0.2s;
+    transition: all var(--transition-base);
+    letter-spacing: 0.2px;
 }
 
-/* PRIMARY */
 .btn.primary {
-    background: #4285F4;
+    background: var(--primary);
     color: white;
+    box-shadow: 0 4px 16px var(--primary-glow);
 }
 
 .btn.primary:hover {
-    background: #3367d6;
+    background: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px var(--primary-glow);
 }
 
-/* SECONDARY */
+.btn.primary:active {
+    transform: translateY(0);
+}
+
 .btn.secondary {
-    background: #e0e0e0;
-    color: #333;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
 }
 
 .btn.secondary:hover {
-    background: #d4d4d4;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* REVIEW BOX */
+/* ── REVIEW BOX ── */
 .review-box {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #eee;
-    margin-bottom: 20px;
+    background: var(--bg-input);
+    padding: 22px 24px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
 }
 
 .review-box p {
-    margin: 8px 0;
-    font-size: 16px;
+    margin: 10px 0;
+    font-size: 14px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+}
+
+.review-box p b {
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 13px;
 }

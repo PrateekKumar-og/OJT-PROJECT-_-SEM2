@@ -5,6 +5,17 @@ export const createTicket = async (req, res) => {
     try {
         const { name, email, issue } = req.body;
 
+        // ✅ INPUT VALIDATION
+        if (!name || !email || !issue) {
+            return res.status(400).json({ message: "Name, email, and issue are required" });
+        }
+
+        // ✅ BASIC EMAIL VALIDATION
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Invalid email address" });
+        }
+
         const ticket = await Ticket.create({
             name,
             email,
@@ -24,7 +35,7 @@ export const createTicket = async (req, res) => {
 // GET ALL TICKETS
 export const getTickets = async (req, res) => {
     try {
-        const tickets = await Ticket.find();
+        const tickets = await Ticket.find().sort({ createdAt: -1 });
 
         res.status(200).json(tickets);
 
@@ -43,6 +54,10 @@ export const resolveTicket = async (req, res) => {
             { status: "Resolved" },
             { new: true }
         );
+
+        if (!ticket) {
+            return res.status(404).json({ message: "Ticket not found" });
+        }
 
         res.status(200).json({
             message: "Ticket resolved",

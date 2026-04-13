@@ -1,8 +1,10 @@
-const Loan = require("../models/loan");
+import Loan from "../models/loan.js";
 
-const createLoan = async (data) => {
+export const createLoanService = async (data) => {
     const loan = new Loan(data);
     return await loan.save();
 };
 
-module.exports = { createLoan };
+export const getAllLoansService = async () => {
+    return await Loan.find().sort({ createdAt: -1 });
+};
