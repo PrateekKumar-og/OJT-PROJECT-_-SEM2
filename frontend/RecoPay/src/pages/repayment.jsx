@@ -5,12 +5,11 @@ import "./repayment.css";
 
 function Repayment() {
 
-    const { loans, payLoan, deleteLoan, addTransaction } = useContext(LoanContext);
+    const { loans, loading, payLoan, deleteLoan, addTransaction } = useContext(LoanContext);
     const toast = useToast();
 
     // 🔥 HANDLE EMI PAYMENT
-    const handlePayEMI = (loan, index) => {
-
+    const handlePayEMI = async (loan) => {
         if (!loan.amount || loan.amount <= 0) {
             toast.error("Invalid loan");
             return;
@@ -21,28 +20,36 @@ function Repayment() {
             return;
         }
 
-        const duration = Number(loan.duration) || 12;
-        const emi = Math.ceil(loan.amount / duration);
+        try {
+            const duration = Number(loan.duration) || 12;
+            const emi = Math.ceil(loan.amount / duration);
 
-        payLoan(index);
+            await payLoan(loan._id);
 
-        addTransaction({
-            id: Date.now(),
-            date: new Date().toLocaleDateString(),
-            type: loan.type,
-            category: "Repayment",
-            amount: emi,
-            status: "Success"
-        });
+            addTransaction({
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                type: loan.type,
+                category: "Repayment",
+                amount: emi,
+                status: "Success"
+            });
 
-        toast.success(`EMI of ₹${emi.toLocaleString()} paid successfully!`);
+            toast.success(`EMI of ₹${emi.toLocaleString()} paid successfully!`);
+        } catch (err) {
+            toast.error("Failed to pay EMI");
+        }
     };
 
     // 🗑️ HANDLE DELETE
-    const handleDelete = (index) => {
+    const handleDelete = async (loan) => {
         if (window.confirm("Are you sure you want to cancel this loan?")) {
-            deleteLoan(index);
-            toast.info("Loan cancelled");
+            try {
+                await deleteLoan(loan._id);
+                toast.info("Loan cancelled");
+            } catch (err) {
+                toast.error("Failed to cancel loan");
+            }
         }
     };
 
@@ -50,6 +57,10 @@ function Repayment() {
     const totalLoaned = loans.reduce((s, l) => s + Number(l.amount || 0), 0);
     const totalPaid = loans.reduce((s, l) => s + Number(l.paid || 0), 0);
     const totalRemaining = totalLoaned - totalPaid;
+
+    if (loading) {
+        return <div style={{ color: "var(--text-muted)", padding: "40px", textAlign: "center" }}>Loading loans...</div>;
+    }
 
     return (
         <div className="repayment-container">
@@ -93,7 +104,7 @@ function Repayment() {
                     </thead>
 
                     <tbody>
-                        {loans.map((loan, index) => {
+                        {loans.map((loan) => {
 
                             const duration = Number(loan.duration) || 12;
                             const emi = Math.ceil(loan.amount / duration);
@@ -102,7 +113,7 @@ function Repayment() {
                             const isFullyPaid = paid >= loan.amount;
 
                             return (
-                                <tr key={loan.id || index}>
+                                <tr key={loan._id}>
                                     <td style={{ fontWeight: "600", color: "var(--text-primary)" }}>{loan.type}</td>
                                     <td>₹{Number(loan.amount).toLocaleString()}</td>
                                     <td>{duration} mo</td>
@@ -122,7 +133,6 @@ function Repayment() {
                                             borderRadius: "100px",
                                             fontSize: "11px",
                                             fontWeight: "600",
-                                            letterSpacing: "0.3px",
                                             background: isFullyPaid
                                                 ? "var(--accent-green-subtle)"
                                                 : "var(--primary-subtle)",
@@ -140,14 +150,14 @@ function Repayment() {
                                             ) : (
                                                 <button
                                                     className="pay-btn"
-                                                    onClick={() => handlePayEMI(loan, index)}
+                                                    onClick={() => handlePayEMI(loan)}
                                                 >
                                                     Pay EMI
                                                 </button>
                                             )}
                                             <button
                                                 className="delete-btn"
-                                                onClick={() => handleDelete(index)}
+                                                onClick={() => handleDelete(loan)}
                                                 title="Cancel Loan"
                                             >
                                                 ✕

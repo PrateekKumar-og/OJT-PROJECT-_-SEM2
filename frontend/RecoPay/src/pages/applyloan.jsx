@@ -9,6 +9,7 @@ function ApplyLoan() {
     const toast = useToast();
 
     const [step, setStep] = useState(1);
+    const [submitting, setSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         amount: "",
@@ -21,7 +22,6 @@ function ApplyLoan() {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // VALIDATION
     const validateStep = () => {
         if (step === 1) {
             if (!formData.amount || Number(formData.amount) <= 0) {
@@ -46,22 +46,26 @@ function ApplyLoan() {
         return true;
     };
 
-    // SUBMIT
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!validateStep()) return;
 
-        addLoan(formData);
+        try {
+            setSubmitting(true);
+            await addLoan(formData);
+            toast.success("Loan Application Submitted! 🎉");
 
-        toast.success("Loan Application Submitted Successfully! 🎉");
-
-        setFormData({
-            amount: "",
-            type: "Personal",
-            duration: "",
-            purpose: ""
-        });
-
-        setStep(1);
+            setFormData({
+                amount: "",
+                type: "Personal",
+                duration: "",
+                purpose: ""
+            });
+            setStep(1);
+        } catch (err) {
+            toast.error("Failed to submit loan. Try again.");
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -70,7 +74,6 @@ function ApplyLoan() {
 
                 <h1 className="form-title">Apply for a Loan</h1>
 
-                {/* STEP 1 */}
                 {step === 1 && (
                     <>
                         <h2>Step 1 — Basic Information</h2>
@@ -103,7 +106,6 @@ function ApplyLoan() {
                     </>
                 )}
 
-                {/* STEP 2 */}
                 {step === 2 && (
                     <>
                         <h2>Step 2 — Loan Details</h2>
@@ -138,7 +140,6 @@ function ApplyLoan() {
                     </>
                 )}
 
-                {/* STEP 3 — REVIEW */}
                 {step === 3 && (
                     <>
                         <h2>Step 3 — Review & Submit</h2>
@@ -155,8 +156,8 @@ function ApplyLoan() {
                             <button className="btn secondary" onClick={() => setStep(2)}>
                                 ← Back
                             </button>
-                            <button className="btn primary" onClick={handleSubmit}>
-                                Submit Application ✓
+                            <button className="btn primary" onClick={handleSubmit} disabled={submitting}>
+                                {submitting ? "Submitting..." : "Submit Application ✓"}
                             </button>
                         </div>
                     </>

@@ -1,104 +1,102 @@
 import { createContext, useState, useEffect } from "react";
+import { applyLoan, getLoans, payEMI, deleteLoanAPI } from "../api/loan.api";
 
 export const LoanContext = createContext();
 
 export const LoanProvider = ({ children }) => {
 
-    // 🔹 LOAD LOANS
-    const [loans, setLoans] = useState(() => {
-        const saved = localStorage.getItem("loans");
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    // 🔹 LOAD TRANSACTIONS
+    const [loans, setLoans] = useState([]);
     const [transactions, setTransactions] = useState(() => {
         const saved = localStorage.getItem("transactions");
         return saved ? JSON.parse(saved) : [];
     });
+    const [loading, setLoading] = useState(true);
 
-    // 🔹 SAVE
+    // 🔹 FETCH LOANS FROM MONGODB ON MOUNT
     useEffect(() => {
-        localStorage.setItem("loans", JSON.stringify(loans));
-    }, [loans]);
+        fetchLoans();
+    }, []);
 
+    // 🔹 SAVE TRANSACTIONS TO LOCALSTORAGE
     useEffect(() => {
         localStorage.setItem("transactions", JSON.stringify(transactions));
     }, [transactions]);
 
-    // ✅ ADD LOAN
-    const addLoan = (loan) => {
-        const newLoan = {
-            ...loan,
-            id: Date.now(),
-            amount: Number(loan.amount),
-            duration: Number(loan.duration),
-            paid: 0,
-            status: "Active",
-            createdAt: new Date().toISOString()
-        };
-
-        setLoans(prev => [...prev, newLoan]);
-
-        // 🔥 CREDIT TRANSACTION
-        addTransaction({
-            id: Date.now(),
-            date: new Date().toLocaleDateString(),
-            type: loan.type,
-            category: "Loan",
-            amount: newLoan.amount,
-            status: "Success"
-        });
+    const fetchLoans = async () => {
+        try {
+            setLoading(true);
+            const data = await getLoans();
+            setLoans(data);
+        } catch (err) {
+            console.error("Failed to fetch loans:", err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // ✅ PAY EMI
-    const payLoan = (index) => {
-        setLoans(prev =>
-            prev.map((loan, i) => {
-                if (i !== index) return loan;
+    // ✅ ADD LOAN → MongoDB
+    const addLoan = async (loan) => {
+        try {
+            const newLoan = await applyLoan(loan);
 
-                const emi = Math.ceil(loan.amount / (loan.duration || 12));
-                let updatedPaid = (loan.paid || 0) + emi;
+            setLoans(prev => [newLoan, ...prev]);
 
-                if (updatedPaid >= loan.amount) {
-                    updatedPaid = loan.amount;
-                }
+            // CREDIT TRANSACTION (localStorage)
+            addTransaction({
+                id: Date.now(),
+                date: new Date().toLocaleDateString(),
+                type: loan.type,
+                category: "Loan",
+                amount: Number(loan.amount),
+                status: "Success"
+            });
 
-                return {
-                    ...loan,
-                    paid: updatedPaid,
-                    status: updatedPaid >= loan.amount ? "Completed" : "Active"
-                };
-            })
-        );
+            return newLoan;
+        } catch (err) {
+            console.error("Failed to add loan:", err);
+            throw err;
+        }
     };
 
-    // ✅ DELETE LOAN
-    const deleteLoan = (index) => {
-        const loan = loans[index];
-        setLoans(prev => prev.filter((_, i) => i !== index));
-
-        // Add cancellation transaction
-        addTransaction({
-            id: Date.now(),
-            date: new Date().toLocaleDateString(),
-            type: loan.type,
-            category: "Cancelled",
-            amount: loan.amount - (loan.paid || 0),
-            status: "Cancelled"
-        });
+    // ✅ PAY EMI → MongoDB
+    const payLoan = async (loanId) => {
+        try {
+            const updatedLoan = await payEMI(loanId);
+            setLoans(prev =>
+                prev.map(l => l._id === loanId ? updatedLoan : l)
+            );
+            return updatedLoan;
+        } catch (err) {
+            console.error("Failed to pay EMI:", err);
+            throw err;
+        }
     };
 
-    // ✅ UPDATE LOAN STATUS
-    const updateLoanStatus = (index, newStatus) => {
-        setLoans(prev =>
-            prev.map((loan, i) => {
-                if (i !== index) return loan;
-                return { ...loan, status: newStatus };
-            })
-        );
+    // ✅ DELETE LOAN → MongoDB
+    const deleteLoan = async (loanId) => {
+        try {
+            const loan = loans.find(l => l._id === loanId);
+            await deleteLoanAPI(loanId);
+            setLoans(prev => prev.filter(l => l._id !== loanId));
+
+            // CANCELLATION TRANSACTION
+            if (loan) {
+                addTransaction({
+                    id: Date.now(),
+                    date: new Date().toLocaleDateString(),
+                    type: loan.type,
+                    category: "Cancelled",
+                    amount: loan.amount - (loan.paid || 0),
+                    status: "Cancelled"
+                });
+            }
+        } catch (err) {
+            console.error("Failed to delete loan:", err);
+            throw err;
+        }
     };
 
-    // ✅ ADD TRANSACTION
+    // ✅ ADD TRANSACTION (localStorage only)
     const addTransaction = (tx) => {
         setTransactions(prev => [...prev, tx]);
     };
@@ -107,20 +105,20 @@ export const LoanProvider = ({ children }) => {
     const clearAllData = () => {
         setLoans([]);
         setTransactions([]);
-        localStorage.removeItem("loans");
         localStorage.removeItem("transactions");
     };
 
     return (
         <LoanContext.Provider value={{
             loans,
+            loading,
             addLoan,
             payLoan,
             deleteLoan,
-            updateLoanStatus,
             transactions,
             addTransaction,
-            clearAllData
+            clearAllData,
+            fetchLoans
         }}>
             {children}
         </LoanContext.Provider>
