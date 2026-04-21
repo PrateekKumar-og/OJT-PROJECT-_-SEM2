@@ -11,8 +11,7 @@ function Profile() {
     const [form, setForm] = useState({
         name: user?.name || "",
         email: user?.email || "",
-        phone: user?.phone || "",
-        address: user?.address || ""
+        phone: user?.phone || ""
     });
 
     const handleChange = (e) => {
@@ -69,20 +68,11 @@ function Profile() {
                     </div>
 
                     <div className="profile-field">
-                        <label>Phone</label>
+                        <label>Phone <span style={{ color: "var(--text-muted)", fontWeight: 400, fontSize: "12px" }}>(Optional)</span></label>
                         {editing ? (
-                            <input name="phone" value={form.phone} onChange={handleChange} placeholder="Add phone number" />
+                            <input name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="e.g. +91 98765 43210" />
                         ) : (
                             <p>{user?.phone || "Not set"}</p>
-                        )}
-                    </div>
-
-                    <div className="profile-field">
-                        <label>Address</label>
-                        {editing ? (
-                            <input name="address" value={form.address} onChange={handleChange} placeholder="Add address" />
-                        ) : (
-                            <p>{user?.address || "Not set"}</p>
                         )}
                     </div>
                 </div>
@@ -91,7 +81,7 @@ function Profile() {
                     {editing ? (
                         <>
                             <button className="profile-save-btn" onClick={handleSave}>Save Changes</button>
-                            <button className="profile-cancel-btn" onClick={() => { setEditing(false); setForm({ name: user?.name || "", email: user?.email || "", phone: user?.phone || "", address: user?.address || "" }); }}>Cancel</button>
+                            <button className="profile-cancel-btn" onClick={() => { setEditing(false); setForm({ name: user?.name || "", email: user?.email || "", phone: user?.phone || "" }); }}>Cancel</button>
                         </>
                     ) : (
                         <button className="profile-edit-btn" onClick={() => setEditing(true)}>Edit Profile</button>
