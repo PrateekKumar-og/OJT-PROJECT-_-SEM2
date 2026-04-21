@@ -7,17 +7,22 @@ import { LoanProvider } from "./context/LoanContext";
 import { ToastProvider } from "./context/ToastContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { AuthProvider } from "./context/AuthContext";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
+const GOOGLE_CLIENT_ID = "11843156405-mr0po6k2tndqddkc1iiv31eqghj2nq25.apps.googleusercontent.com";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
-    <ThemeProvider>
-      <ToastProvider>
-        <AuthProvider>
-          <LoanProvider>
-            <App />
-          </LoanProvider>
-        </AuthProvider>
-      </ToastProvider>
-    </ThemeProvider>
-  </BrowserRouter>
+  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+    <BrowserRouter>
+      <ThemeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <LoanProvider>
+              <App />
+            </LoanProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  </GoogleOAuthProvider>
 );

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useGoogleLogin } from "@react-oauth/google";
 import "./login.css";
 
 function Login() {
@@ -9,7 +10,7 @@ function Login() {
     const toast = useToast();
     const navigate = useNavigate();
 
-    const [mode, setMode] = useState("login"); // login | signup | google
+    const [mode, setMode] = useState("login"); // login | signup
     const [form, setForm] = useState({ name: "", email: "", password: "" });
 
     const handleChange = (e) => {
@@ -71,24 +72,34 @@ function Login() {
         navigate("/dashboard");
     };
 
-    // ── GOOGLE LOGIN ──
-    const handleGoogle = (e) => {
-        e.preventDefault();
+    // ── REAL GOOGLE LOGIN with Account Chooser ──
+    const googleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            try {
+                // Fetch user info from Google using the access token
+                const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+                });
+                const userInfo = await res.json();
 
-        if (!form.email) {
-            toast.error("Please enter your Google email");
-            return;
-        }
+                loginWithGoogle({
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    picture: userInfo.picture,
+                });
 
-        if (!form.email.includes("@gmail.com")) {
-            toast.error("Please enter a valid Gmail address");
-            return;
-        }
-
-        loginWithGoogle(form.email);
-        toast.success("Signed in with Google! 🎉");
-        navigate("/dashboard");
-    };
+                toast.success("Signed in with Google! 🎉");
+                navigate("/dashboard");
+            } catch (err) {
+                console.error("Google login error:", err);
+                toast.error("Google sign-in failed. Please try again.");
+            }
+        },
+        onError: () => {
+            toast.error("Google sign-in was cancelled.");
+        },
+        prompt: "select_account", // ✅ Forces account chooser every time
+    });
 
     return (
         <div className="login-page">
@@ -131,19 +142,13 @@ function Login() {
                     <h2>
                         {mode === "login" && "Welcome back"}
                         {mode === "signup" && "Create account"}
-                        {mode === "google" && "Continue with Google"}
                     </h2>
                     <p className="login-subtitle">
                         {mode === "login" && "Sign in to your account"}
                         {mode === "signup" && "Get started for free"}
-                        {mode === "google" && "Enter your Gmail to continue"}
                     </p>
 
-                    <form onSubmit={
-                        mode === "login" ? handleLogin :
-                            mode === "signup" ? handleSignup :
-                                handleGoogle
-                    }>
+                    <form onSubmit={mode === "login" ? handleLogin : handleSignup}>
                         {/* NAME (signup only) */}
                         {mode === "signup" && (
                             <div className="login-field">
@@ -166,28 +171,25 @@ function Login() {
                                 name="email"
                                 value={form.email}
                                 onChange={handleChange}
-                                placeholder={mode === "google" ? "you@gmail.com" : "you@example.com"}
+                                placeholder="you@example.com"
                             />
                         </div>
 
-                        {/* PASSWORD (not for google) */}
-                        {mode !== "google" && (
-                            <div className="login-field">
-                                <label>Password</label>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    placeholder="••••••••"
-                                />
-                            </div>
-                        )}
+                        {/* PASSWORD */}
+                        <div className="login-field">
+                            <label>Password</label>
+                            <input
+                                type="password"
+                                name="password"
+                                value={form.password}
+                                onChange={handleChange}
+                                placeholder="••••••••"
+                            />
+                        </div>
 
                         <button type="submit" className="login-submit">
                             {mode === "login" && "Sign In"}
                             {mode === "signup" && "Create Account"}
-                            {mode === "google" && "Continue with Google →"}
                         </button>
                     </form>
 
@@ -196,13 +198,11 @@ function Login() {
                         <span>or</span>
                     </div>
 
-                    {/* GOOGLE BUTTON */}
-                    {mode !== "google" && (
-                        <button className="login-google-btn" onClick={() => { setMode("google"); setForm({ name: "", email: "", password: "" }); }}>
-                            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8.5h11.3C34 33.3 29.5 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l6.2-6.2C34.1 5.1 29.3 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.3-.1-2.7-.4-4z" /><path fill="#FF3D00" d="M6.3 14.7l7.1 5.2C15 16.5 19.1 14 24 14c3 0 5.7 1.1 7.8 2.9l6.2-6.2C34.1 5.1 29.3 3 24 3 16.3 3 9.7 7.6 6.3 14.7z" /><path fill="#4CAF50" d="M24 45c5.2 0 10-1.8 13.7-5l-6.7-5.5C29.2 36 26.7 37 24 37c-5.4 0-10-3.6-11.7-8.5L5.2 34C8.6 41.2 15.8 45 24 45z" /><path fill="#1976D2" d="M43.6 20H24v8.5h11.3c-.8 2.6-2.5 4.7-4.8 6.1l6.7 5.5C41.4 36.2 45 30.7 45 24c0-1.3-.1-2.7-.4-4z" /></svg>
-                            Continue with Google
-                        </button>
-                    )}
+                    {/* REAL GOOGLE SIGN-IN BUTTON */}
+                    <button className="login-google-btn" onClick={() => googleLogin()}>
+                        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8.5h11.3C34 33.3 29.5 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l6.2-6.2C34.1 5.1 29.3 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.3-.1-2.7-.4-4z" /><path fill="#FF3D00" d="M6.3 14.7l7.1 5.2C15 16.5 19.1 14 24 14c3 0 5.7 1.1 7.8 2.9l6.2-6.2C34.1 5.1 29.3 3 24 3 16.3 3 9.7 7.6 6.3 14.7z" /><path fill="#4CAF50" d="M24 45c5.2 0 10-1.8 13.7-5l-6.7-5.5C29.2 36 26.7 37 24 37c-5.4 0-10-3.6-11.7-8.5L5.2 34C8.6 41.2 15.8 45 24 45z" /><path fill="#1976D2" d="M43.6 20H24v8.5h11.3c-.8 2.6-2.5 4.7-4.8 6.1l6.7 5.5C41.4 36.2 45 30.7 45 24c0-1.3-.1-2.7-.4-4z" /></svg>
+                        Continue with Google
+                    </button>
 
                     {/* SWITCH MODE */}
                     <div className="login-switch">
@@ -211,9 +211,6 @@ function Login() {
                         )}
                         {mode === "signup" && (
                             <p>Already have an account? <button onClick={() => { setMode("login"); setForm({ name: "", email: "", password: "" }); }}>Sign in</button></p>
-                        )}
-                        {mode === "google" && (
-                            <p>Want to use email? <button onClick={() => { setMode("login"); setForm({ name: "", email: "", password: "" }); }}>Back to login</button></p>
                         )}
                     </div>
                 </div>

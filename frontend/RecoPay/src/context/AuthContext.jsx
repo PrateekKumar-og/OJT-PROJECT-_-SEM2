@@ -25,12 +25,12 @@ export const AuthProvider = ({ children }) => {
         login(userData);
     };
 
-    const loginWithGoogle = (email) => {
+    const loginWithGoogle = (googleUser) => {
         const userData = {
-            name: email.split("@")[0],
-            email: email,
+            name: googleUser.name || googleUser.email.split("@")[0],
+            email: googleUser.email,
             method: "google",
-            avatar: email.charAt(0).toUpperCase()
+            avatar: googleUser.picture || googleUser.email.charAt(0).toUpperCase()
         };
         login(userData);
     };
