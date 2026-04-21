@@ -1,31 +1,48 @@
 import { createContext, useState, useEffect } from "react";
 import { applyLoan, getLoans, payEMI, deleteLoanAPI } from "../api/loan.api";
+import { useAuth } from "./AuthContext";
 
 export const LoanContext = createContext();
 
 export const LoanProvider = ({ children }) => {
+    const { user } = useAuth();
+    const userEmail = user?.email || "";
+
+    // Transaction key per user
+    const txKey = userEmail ? `transactions_${userEmail}` : "transactions";
 
     const [loans, setLoans] = useState([]);
     const [transactions, setTransactions] = useState(() => {
-        const saved = localStorage.getItem("transactions");
+        const saved = localStorage.getItem(txKey);
         return saved ? JSON.parse(saved) : [];
     });
     const [loading, setLoading] = useState(true);
 
-    // 🔹 FETCH LOANS FROM MONGODB ON MOUNT
+    // 🔹 FETCH USER'S LOANS FROM MONGODB
     useEffect(() => {
-        fetchLoans();
-    }, []);
+        if (userEmail) {
+            fetchLoans();
+        } else {
+            setLoans([]);
+            setLoading(false);
+        }
+    }, [userEmail]);
 
-    // 🔹 SAVE TRANSACTIONS TO LOCALSTORAGE
+    // 🔹 RELOAD TRANSACTIONS WHEN USER CHANGES
     useEffect(() => {
-        localStorage.setItem("transactions", JSON.stringify(transactions));
-    }, [transactions]);
+        const saved = localStorage.getItem(txKey);
+        setTransactions(saved ? JSON.parse(saved) : []);
+    }, [txKey]);
+
+    // 🔹 SAVE TRANSACTIONS TO LOCALSTORAGE (per user)
+    useEffect(() => {
+        localStorage.setItem(txKey, JSON.stringify(transactions));
+    }, [transactions, txKey]);
 
     const fetchLoans = async () => {
         try {
             setLoading(true);
-            const data = await getLoans();
+            const data = await getLoans(userEmail);
             setLoans(data);
         } catch (err) {
             console.error("Failed to fetch loans:", err);
@@ -34,10 +51,10 @@ export const LoanProvider = ({ children }) => {
         }
     };
 
-    // ✅ ADD LOAN → MongoDB
+    // ✅ ADD LOAN → MongoDB (with userEmail)
     const addLoan = async (loan) => {
         try {
-            const newLoan = await applyLoan(loan);
+            const newLoan = await applyLoan({ ...loan, userEmail });
 
             setLoans(prev => [newLoan, ...prev]);
 
@@ -105,7 +122,7 @@ export const LoanProvider = ({ children }) => {
     const clearAllData = () => {
         setLoans([]);
         setTransactions([]);
-        localStorage.removeItem("transactions");
+        localStorage.removeItem(txKey);
     };
 
     return (

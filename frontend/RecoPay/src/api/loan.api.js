@@ -24,9 +24,10 @@ export const applyLoan = async (data) => {
     return res.json();
 };
 
-// GET ALL LOANS
-export const getLoans = async () => {
-    const res = await fetchWithRetry(`${API_URL}/loans`);
+// GET LOANS (filtered by email)
+export const getLoans = async (email) => {
+    const url = email ? `${API_URL}/loans?email=${encodeURIComponent(email)}` : `${API_URL}/loans`;
+    const res = await fetchWithRetry(url);
     return res.json();
 };
 

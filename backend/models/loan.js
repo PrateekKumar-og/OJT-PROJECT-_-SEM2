@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const loanSchema = new mongoose.Schema({
+    userEmail: {
+        type: String,
+        required: true
+    },
     type: {
         type: String,
         required: true

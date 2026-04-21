@@ -3,10 +3,10 @@ import Loan from "../models/loan.js";
 // CREATE LOAN
 export const createLoan = async (req, res) => {
     try {
-        const { type, amount, duration, purpose } = req.body;
+        const { type, amount, duration, purpose, userEmail } = req.body;
 
-        if (!type || !amount) {
-            return res.status(400).json({ message: "Type and amount are required" });
+        if (!type || !amount || !userEmail) {
+            return res.status(400).json({ message: "Type, amount, and userEmail are required" });
         }
 
         if (Number(amount) <= 0) {
@@ -14,6 +14,7 @@ export const createLoan = async (req, res) => {
         }
 
         const loan = await Loan.create({
+            userEmail,
             type,
             amount: Number(amount),
             duration: Number(duration) || 12,
@@ -29,10 +30,12 @@ export const createLoan = async (req, res) => {
     }
 };
 
-// GET ALL LOANS
+// GET LOANS (filtered by userEmail)
 export const getLoans = async (req, res) => {
     try {
-        const loans = await Loan.find().sort({ createdAt: -1 });
+        const { email } = req.query;
+        const filter = email ? { userEmail: email } : {};
+        const loans = await Loan.find(filter).sort({ createdAt: -1 });
         res.status(200).json(loans);
     } catch (error) {
         res.status(500).json({ message: error.message });
