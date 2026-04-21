@@ -11,11 +11,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   </head>
   <body>
-    <!-- Hide Google One Tap popup -->
+    <!-- Hide Google One Tap popup completely -->
     <style>
       #credential_picker_container,
-      iframe[src*="accounts.google.com/gsi"] {
+      #credential_picker_iframe,
+      #g_a11y_announcement,
+      iframe[src*="accounts.google.com/gsi"],
+      iframe[src*="accounts.google.com/o/oauth2"],
+      div[style*="accounts.google.com"],
+      .S9gUrf-YoZ4jf,
+      .nsm7Bb-HzV7m-LgbsSe-bN97Pc {
         display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
       }
     </style>
     <div id="root"></div>

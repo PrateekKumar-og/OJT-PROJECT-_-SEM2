@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import Dashboard from "./pages/dashboard";
@@ -20,6 +21,19 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
+  // Kill Google One Tap popup
+  useEffect(() => {
+    const removeGoogleOneTap = () => {
+      const el = document.getElementById("credential_picker_container");
+      if (el) el.remove();
+      document.querySelectorAll('iframe[src*="accounts.google.com/gsi"]').forEach(f => f.remove());
+    };
+    removeGoogleOneTap();
+    const observer = new MutationObserver(removeGoogleOneTap);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <Routes>
       {/* LOGIN */}
