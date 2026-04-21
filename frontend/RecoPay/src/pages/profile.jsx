@@ -34,7 +34,11 @@ function Profile() {
                 {/* AVATAR */}
                 <div className="profile-avatar">
                     <div className="avatar-circle">
-                        {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                        {user?.avatar?.startsWith("http") ? (
+                            <img src={user.avatar} alt={user?.name?.charAt(0) || "U"} referrerPolicy="no-referrer" />
+                        ) : (
+                            user?.name?.charAt(0)?.toUpperCase() || "U"
+                        )}
                     </div>
                     <div className="avatar-info">
                         <h2>{user?.name || "User"}</h2>

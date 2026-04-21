@@ -73,7 +73,11 @@ function Dashboard() {
                 {/* ── USER + LOGOUT ── */}
                 <div className="sidebar-user">
                     <div className="sidebar-avatar">
-                        {user?.avatar || user?.name?.charAt(0)?.toUpperCase() || "U"}
+                        {user?.avatar?.startsWith("http") ? (
+                            <img src={user.avatar} alt={user?.name?.charAt(0) || "U"} referrerPolicy="no-referrer" />
+                        ) : (
+                            user?.avatar || user?.name?.charAt(0)?.toUpperCase() || "U"
+                        )}
                     </div>
                     <div className="sidebar-user-info">
                         <span className="sidebar-username">{user?.name || "User"}</span>
