@@ -1,0 +1,279 @@
+====================================================================
+          30 INTERVIEW QUESTIONS — RecoPay (Full-Stack Fin-Tech Project)
+====================================================================
+
+----------------------------------------------------------------------
+  SECTION 1 : PROJECT OVERVIEW & ARCHITECTURE  (Q1 – Q6)
+----------------------------------------------------------------------
+
+Q1.  What is RecoPay and what problem does it solve?
+Ans: RecoPay is a full-stack Fin-Tech web application that allows users to
+     manage personal loans digitally. Users can apply for loans, track EMI
+     repayments, view transaction history, and use an EMI calculator — all
+     through a responsive, modern UI with Google authentication.
+
+Q2.  Explain the overall architecture of RecoPay. How do the frontend and
+     backend communicate?
+Ans: RecoPay follows a client-server architecture. The React frontend
+     (built with Vite) communicates with the Node.js/Express backend via
+     RESTful API calls using the Fetch API. The backend connects to MongoDB
+     Atlas for persistent data storage. The frontend is deployed on Vercel
+     and the backend is deployed on Render.
+
+Q3.  What is the tech stack used in this project and why did you choose it?
+Ans: Frontend — React.js (with Vite), React Router DOM, @react-oauth/google,
+     jsPDF for PDF generation. Backend — Node.js, Express.js, Mongoose,
+     dotenv, cors, bcryptjs, jsonwebtoken. Database — MongoDB Atlas.
+     Deployment — Vercel (frontend) and Render (backend).
+     React was chosen for component-based UI, Express for lightweight API
+     development, and MongoDB for flexible schema design suited to loan data.
+
+Q4.  What is the folder structure of your project? Explain the role of each
+     major directory.
+Ans: The project has two main directories:
+     • backend/ — contains config/ (DB connection), models/ (Mongoose schemas),
+       controllers/ (business logic), routes/ (API endpoints), services/, and
+       server.js (entry point).
+     • frontend/RecoPay/src/ — contains pages/ (UI views like dashboard,
+       login, profile), context/ (AuthContext, LoanContext for state
+       management), api/ (API helper functions), and assets/.
+
+Q5.  Why did you choose MongoDB Atlas over a relational database like MySQL?
+Ans: MongoDB Atlas was chosen because:
+     • Loan data has a flexible structure well-suited for document-based storage.
+     • Mongoose provides a clean schema-based API on top of MongoDB.
+     • Atlas offers free-tier cloud hosting with easy scalability.
+     • JSON-like documents align naturally with the JavaScript/Node.js ecosystem.
+
+Q6.  How does the application handle the separation of concerns?
+Ans: The backend follows the MVC pattern — Models (Mongoose schemas in models/),
+     Controllers (business logic in controllers/), and Routes (endpoint
+     definitions in routes/). The frontend separates concerns using React
+     Context for state management, dedicated API modules for HTTP calls, and
+     individual page components for UI rendering.
+
+
+----------------------------------------------------------------------
+  SECTION 2 : FRONTEND & REACT  (Q7 – Q14)
+----------------------------------------------------------------------
+
+Q7.  What is React Context API and how is it used in RecoPay?
+Ans: The React Context API provides a way to share state across the component
+     tree without prop drilling. RecoPay uses two contexts:
+     • AuthContext — manages user authentication state (login, signup,
+       Google login, logout) and persists user data in localStorage.
+     • LoanContext — manages loan data (fetching from API, adding, paying EMI,
+       deleting) and transaction history.
+
+Q8.  Explain the authentication flow in RecoPay.
+Ans: RecoPay supports two authentication methods:
+     1. Manual login/signup — user credentials are stored in localStorage.
+     2. Google OAuth — uses @react-oauth/google to get the user's Google
+        profile (name, email, picture) and stores it via AuthContext.
+     On login, user data is saved to localStorage under "recopay_user".
+     The isAuthenticated flag is derived from whether the user object exists.
+
+Q9.  What is a ProtectedRoute and how is it implemented in your project?
+Ans: ProtectedRoute is a wrapper component in App.jsx that checks if the user
+     is authenticated using the useAuth() hook. If isAuthenticated is false,
+     it redirects the user to /login using React Router's <Navigate> component.
+     All dashboard routes are wrapped inside ProtectedRoute.
+
+Q10. How does React Router work in RecoPay? Explain the routing structure.
+Ans: RecoPay uses react-router-dom v6 with the following structure:
+     • /login → Login page (public)
+     • / → Redirects to /dashboard
+     • /dashboard → Protected parent route with nested child routes:
+       - index → DashboardHome
+       - apply-loan → ApplyLoan
+       - repayment → Repayment
+       - transactions → Transactions
+       - support → Support
+       - emi-calculator → EMICalculator
+       - profile → Profile
+     • * → 404 page
+
+Q11. What is the purpose of the useEffect hook in App.jsx that removes
+     Google One Tap popup?
+Ans: After Google login, Google's One Tap popup can keep reappearing, which
+     is undesirable. The useEffect sets up a MutationObserver on document.body
+     that watches for new child elements. Whenever a Google credential picker
+     iframe or container is injected, it removes it immediately. The observer
+     is cleaned up on component unmount.
+
+Q12. How does the LoanContext manage state and interact with the backend?
+Ans: LoanContext uses useState for loans, transactions, and loading state.
+     On mount (or when userEmail changes), it fetches loans from the MongoDB
+     backend via the getLoans() API call. It provides functions like addLoan(),
+     payLoan(), and deleteLoan() that call the backend API, update local state
+     on success, and also log transactions to localStorage per user.
+
+Q13. What is the role of the loan.api.js file?
+Ans: loan.api.js is the API layer that abstracts all HTTP calls to the backend.
+     It exports four functions: applyLoan (POST), getLoans (GET), payEMI (PUT),
+     and deleteLoanAPI (DELETE). It also includes a fetchWithRetry wrapper that
+     automatically retries failed requests up to 3 times with a 2-second delay,
+     which is essential because the Render free tier puts the server to sleep.
+
+Q14. What libraries are used for PDF generation and how are they used?
+Ans: The project uses jsPDF and jspdf-autotable for generating downloadable
+     PDF reports (e.g., transaction history or loan summaries). jsPDF creates
+     the PDF document and jspdf-autotable adds formatted tables to it.
+
+
+----------------------------------------------------------------------
+  SECTION 3 : BACKEND & DATABASE  (Q15 – Q22)
+----------------------------------------------------------------------
+
+Q15. Explain the Loan schema in MongoDB. What fields does it have?
+Ans: The Loan schema (models/loan.js) has the following fields:
+     • userEmail (String, required) — associates the loan with a user
+     • type (String, required) — loan type (e.g., Personal, Home, Car)
+     • amount (Number, required, min: 1) — total loan amount
+     • duration (Number, default: 12, min: 1) — repayment duration in months
+     • purpose (String, default: "") — reason for the loan
+     • paid (Number, default: 0) — amount paid so far
+     • status (String, enum: ["Active", "Completed"], default: "Active")
+     • timestamps: true — auto-generates createdAt and updatedAt
+
+Q16. What CRUD operations does the loan controller support? Explain each.
+Ans: The loan controller (loan.controller.js) supports:
+     • CREATE (createLoan) — validates type, amount, userEmail; creates a new
+       loan document in MongoDB.
+     • READ (getLoans) — fetches loans filtered by userEmail query parameter,
+       sorted by createdAt descending.
+     • UPDATE (updateLoan) — calculates EMI (amount / duration), increments
+       the paid field, and marks status as "Completed" if fully paid.
+     • DELETE (deleteLoan) — removes a loan by ID using findByIdAndDelete.
+
+Q17. How is the EMI calculated in the updateLoan controller?
+Ans: EMI is calculated as: Math.ceil(loan.amount / (loan.duration || 12)).
+     Each time the user pays, the EMI amount is added to loan.paid. If
+     loan.paid >= loan.amount, the status is set to "Completed" and paid
+     is capped at the total amount to prevent overpayment.
+
+Q18. What middleware is used in the Express server and why?
+Ans: Two main middleware are used:
+     • cors() — enables Cross-Origin Resource Sharing so the frontend
+       (on a different domain) can make API requests to the backend.
+     • express.json() — parses incoming JSON request bodies so that
+       req.body is available in route handlers.
+     Additionally, a custom error-handling middleware catches unhandled
+     errors and returns a 500 response.
+
+Q19. How does the backend connect to MongoDB Atlas?
+Ans: The backend uses a connectDB function in config/db.js that calls
+     mongoose.connect() with the MONGO_URI stored in the .env file.
+     This connection is established when server.js calls connectDB()
+     at startup, before any routes are handled.
+
+Q20. What are the API endpoints in RecoPay? List them with HTTP methods.
+Ans: Loan endpoints (base: /api/loans):
+     • POST   /api/loans          — Create a new loan
+     • GET    /api/loans           — Get all loans (filter by ?email=)
+     • PUT    /api/loans/:id/pay   — Pay one EMI installment
+     • DELETE /api/loans/:id       — Delete/cancel a loan
+
+     Ticket endpoints (base: /api/tickets):
+     • Support ticket CRUD operations for customer support
+
+Q21. What environment variables does the project require?
+Ans: The project requires:
+     • MONGO_URI — MongoDB Atlas connection string
+     • GOOGLE_CLIENT_ID — Google OAuth client ID for authentication
+     • JWT_SECRET — Secret key for JSON Web Token signing
+     • PORT — (optional) Server port, defaults to 5000
+
+Q22. What is the role of the "type": "module" in package.json?
+Ans: Setting "type": "module" enables ES Module syntax (import/export) in
+     Node.js instead of CommonJS (require/module.exports). This allows the
+     backend to use the same import/export syntax as the React frontend,
+     maintaining consistency across the codebase.
+
+
+----------------------------------------------------------------------
+  SECTION 4 : DEPLOYMENT & DEVOPS  (Q23 – Q26)
+----------------------------------------------------------------------
+
+Q23. How is the project deployed? Explain the deployment architecture.
+Ans: The frontend is deployed on Vercel (static hosting with automatic
+     builds from GitHub). The backend is deployed on Render (Node.js
+     web service). MongoDB Atlas hosts the database in the cloud. The
+     frontend communicates with the backend via the Render URL:
+     https://recopay.onrender.com/api
+
+Q24. What is the cold start problem on Render and how does RecoPay handle it?
+Ans: Render's free tier puts inactive services to sleep after 15 minutes.
+     The first request after sleep causes a "cold start" delay of 30-60
+     seconds. RecoPay handles this with a fetchWithRetry function in
+     loan.api.js that retries failed API calls up to 3 times with a
+     2-second delay between attempts.
+
+Q25. What is CORS and why is it needed in RecoPay?
+Ans: CORS (Cross-Origin Resource Sharing) is a security mechanism that
+     restricts web pages from making requests to a different domain.
+     Since the frontend (Vercel) and backend (Render) are on different
+     domains, the backend must include CORS headers. The cors() middleware
+     in Express enables this by adding the appropriate Access-Control
+     headers to responses.
+
+Q26. How would you set up CI/CD for this project?
+Ans: Both Vercel and Render support automatic deployments from GitHub.
+     When code is pushed to the main branch:
+     • Vercel automatically builds and deploys the frontend.
+     • Render automatically rebuilds and deploys the backend.
+     Additional steps could include adding GitHub Actions for running
+     linting, tests, and build checks before merging pull requests.
+
+
+----------------------------------------------------------------------
+  SECTION 5 : ADVANCED / CONCEPTUAL  (Q27 – Q30)
+----------------------------------------------------------------------
+
+Q27. What security improvements would you add to RecoPay?
+Ans: Current improvements I would add:
+     • JWT-based authentication middleware to protect backend API routes
+     • Password hashing with bcrypt for manual login (bcryptjs is already
+       a dependency but not fully implemented)
+     • Input validation and sanitization to prevent injection attacks
+     • Rate limiting to prevent brute-force attacks
+     • HTTPS enforcement and secure cookie handling
+     • Moving sensitive operations from localStorage to httpOnly cookies
+
+Q28. How would you scale RecoPay to handle thousands of users?
+Ans: Scaling strategies include:
+     • Database indexing on userEmail for faster queries
+     • Pagination for loan and transaction lists
+     • Redis caching for frequently accessed data
+     • Load balancing with multiple backend instances
+     • Moving from Render free tier to a production hosting service
+     • Implementing database connection pooling
+     • Using a CDN for static frontend assets
+
+Q29. What is the difference between localStorage and MongoDB in RecoPay's
+     data strategy?
+Ans: RecoPay uses a hybrid approach:
+     • MongoDB (via backend API) stores loan data — this is persistent,
+       server-side, and shared across devices.
+     • localStorage stores transactions and user session data — this is
+       client-side, device-specific, and faster to access but not synced
+       across devices. Transactions use per-user keys (transactions_{email})
+       to isolate data between users on the same browser.
+
+Q30. If you had to rebuild this project from scratch, what would you do
+     differently?
+Ans: Key improvements would include:
+     • Use TypeScript for type safety on both frontend and backend
+     • Implement proper JWT authentication middleware from the start
+     • Store transactions in MongoDB instead of localStorage for
+       cross-device sync
+     • Add comprehensive error boundaries in React
+     • Implement unit and integration tests (Jest + React Testing Library)
+     • Use a state management library like Zustand instead of Context for
+       better performance at scale
+     • Add form validation with a library like Zod or Yup
+     • Implement proper logging with Winston or Pino on the backend
+
+====================================================================
+                        END OF QUESTIONS
+====================================================================
